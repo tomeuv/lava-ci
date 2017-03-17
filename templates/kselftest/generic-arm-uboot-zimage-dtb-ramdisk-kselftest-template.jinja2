@@ -1,0 +1,54 @@
+{% extends 'base/kernel-ci-base-uboot.jinja2' %}
+{% set nfsrootfs_url = 'https://people.collabora.com/~tomeu/lava-files/stretch-armhf-nfs.tar.gz' %}
+{% set initrd_url = 'https://people.collabora.com/~tomeu/lava-files/ramdisk.cpio.gz' %}
+{% block metadata %}
+{{ super() }}
+{% endblock %}
+{% block main %}
+{{ super() }}
+{% endblock %}
+{% block actions %}
+{%- block deploy %}
+{{ super () }}
+{%- endblock %}
+
+  - boot:
+      method: u-boot
+      commands: nfs
+      type: zimage
+      prompts: 
+       - "root@stretch:"
+      auto_login:
+        login_prompt: "login:"
+        username: root
+
+  - test:
+      timeout:
+        minutes: 10
+      definitions:
+      - repository:
+          metadata:
+            format: Lava-Test Test Definition 1.0
+            name: kselftest
+            description: "kselftest"
+            os:
+            - debian
+            scope:
+            - functional
+          parse:
+            pattern: "^selftests:\\s(?P<test_case_id>\\S+)\\s[[](?P<result>(FAIL|PASS|SKIP))[]]"
+            fixupdict:
+              PASS: pass
+              FAIL: fail
+              SKIP: skip
+          run:
+            steps:
+            - wget http://storage.kernelci.org/images/selftests/arm/kselftest.tar.gz
+            - tar xvfz kselftest.tar.gz
+            - cd kselftest
+            - ./run_kselftest.sh
+        from: inline
+        name: kselftest
+        path: inline/kselftest.yaml
+
+{% endblock %}
