@@ -22,6 +22,11 @@ actions:
          url: {{ modules_url }}
          compression: xz
 {%- endif %}
+{%- if nfsrootfs_url %}
+     nfsrootfs:
+         url: {{ nfsrootfs_url }}
+         compression: gz
+{%- endif %}
      dtb:
          url: {{ dtb_url }}
      os: oe
